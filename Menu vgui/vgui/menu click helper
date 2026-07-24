@@ -1,0 +1,40 @@
+-- LocalScript в StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local TARGET_X, TARGET_Y = 555, 320
+local TOLERANCE = 15
+
+-- Визуальная метка цели (кружок на экране)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TargetMarker"
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+local marker = Instance.new("Frame")
+marker.Size = UDim2.new(0, 20, 0, 20)
+marker.Position = UDim2.new(0, TARGET_X - 10, 0, TARGET_Y - 10)
+marker.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+marker.BackgroundTransparency = 0.3
+marker.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = marker
+
+-- Проверка клика
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local x, y = input.Position.X, input.Position.Y
+
+        print(string.format("Клик зафиксирован в: %d, %d (gameProcessed=%s)", x, y, tostring(gameProcessed)))
+
+        if math.abs(x - TARGET_X) <= TOLERANCE and math.abs(y - TARGET_Y) <= TOLERANCE then
+            print("✅ Попал в целевую точку (555, 320)!")
+        end
+    end
+end)
