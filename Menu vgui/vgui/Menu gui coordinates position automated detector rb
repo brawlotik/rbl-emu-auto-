@@ -1,0 +1,18 @@
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Size = UDim2.new(0, 150, 0, 30)
+TextLabel.BackgroundTransparency = 1
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.BorderSizePixel = 0
+TextLabel.FontSize = Enum.FontSize.Size18
+TextLabel.Text = "X: 0 Y: 0"
+TextLabel.Parent = game.Players.LocalPlayer.PlayerGui.ScreenGui
+
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mousePos = UserInputService:GetMouseLocation()
+        TextLabel.Position = UDim2.new(0, mousePos.X + 15, 0, mousePos.Y + 15) -- Смещаем надпись от курсора
+        TextLabel.Text = string.format("X: %d Y: %d", math.floor(mousePos.X), math.floor(mousePos.Y))
+    end
+end)
