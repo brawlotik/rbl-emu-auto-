@@ -1,0 +1,19 @@
+-- LocalScript в StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function checkPlayerCount()
+    if #Players:GetPlayers() > 1 then
+        player:Kick("Admin/Moderator")
+    end
+end
+
+-- Проверка при входе нового игрока (мгновенная реакция)
+Players.PlayerAdded:Connect(checkPlayerCount)
+
+-- Постоянный цикл проверки каждую секунду
+while true do
+    checkPlayerCount()
+    task.wait(1)
+end
