@@ -3,8 +3,8 @@ local UserInputService = game:GetService("UserInputService")
 local Mouse = game.Players.LocalPlayer:GetMouse()
 
 -- Координаты, на которые нужно нажать (например, 500, 300)
-local targetX = 392
-local targetY = 221.35
+local targetX = 555
+local targetY = 320
 
 -- Функция для создания виртуального щелчка мыши
 local function virtualMouseClick(x, y)
