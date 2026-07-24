@@ -1,0 +1,50 @@
+-- Получаем сервисы
+local UserInputService = game:GetService("UserInputService")
+local Mouse = game.Players.LocalPlayer:GetMouse()
+
+-- Координаты, на которые нужно нажать (например, 500, 300)
+local targetX = 500
+local targetY = 300
+
+-- Функция для создания виртуального щелчка мыши
+local function virtualMouseClick(x, y)
+    -- Устанавливаем позицию мыши на целевые координаты
+    Mouse.Move({X = x, Y = y}, true)
+
+    -- Создаем событие нажатия левой кнопки мыши
+    local mouseEvent = Instance.new("InputObject")
+    mouseEvent.UserInputType = Enum.UserInputType.MouseButton1
+    mouseEvent.UserInputState = Enum.UserInputState.Begin
+
+    -- Вызываем событие InputChanged
+    UserInputService.InputBegan:Fire(mouseEvent)
+
+    -- Создаем событие отпускания левой кнопки мыши
+    mouseEvent.UserInputState = Enum.UserInputState.End
+
+    -- Вызываем событие InputChanged
+    UserInputService.InputEnded:Fire(mouseEvent)
+end
+
+-- Пример использования функции нажатия на координаты (500, 300)
+virtualMouseClick(targetX, targetY)
+
+-- Если вы хотите чтобы это происходило периодически или по определенному условию,
+-- можно использовать корутины или таймеры. Например:
+
+-- Пример: нажимать каждые 2 секунды
+while true do
+    virtualMouseClick(targetX, targetY)
+    wait(2) -- Ждем 2 секунды перед следующим нажатием
+end
+
+-- Чтобы остановить выполнение этого цикла, можно использовать переменную-флаг
+local running = true
+
+-- Пример: нажимать каждые 2 секунды с возможностью остановки
+while running do
+    virtualMouseClick(targetX, targetY)
+    wait(2) -- Ждем 2 секунды перед следующим нажатием
+end
+
+-- Чтобы остановить выполнение цикла, просто установите running = false
