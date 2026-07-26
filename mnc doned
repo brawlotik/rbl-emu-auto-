@@ -1,0 +1,8 @@
+wait(1)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/rbl-emu-auto-/refs/heads/mnc/Menu%20vgui/vgui/mnc1",true))()
+wait(1)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/rbl-emu-auto-/refs/heads/mnc/Menu%20vgui/vgui/mnc2",true))()
+wait(1)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/rbl-emu-auto-/refs/heads/mnc/Menu%20vgui/vgui/mnc3",true))()
+wait(1)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/rbl-emu-auto-/refs/heads/mnc/Menu%20vgui/vgui/mnc4",true))()
