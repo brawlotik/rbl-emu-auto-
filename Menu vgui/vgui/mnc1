@@ -1,0 +1,2 @@
+wait(40)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/boblox/refs/heads/main/mnc%20farm",true))()
