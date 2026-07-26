@@ -1,0 +1,6 @@
+wait(40)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/boblox/refs/heads/main/mnc%20farm",true))()
+wait(1)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/rbl-emu-auto-/refs/heads/mnc/Menu%20vgui/vgui/mnc4",true))()
+wait(1)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/brawlotik/rbl-emu-auto-/refs/heads/mnc/Menu%20vgui/vgui/mnc2",true))()
