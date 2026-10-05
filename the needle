@@ -1,0 +1,110 @@
+-- Services
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local arcadeReport = ReplicatedStorage:WaitForChild("Arcade"):WaitForChild("ArcadeReport")
+
+-- Variable Kontrol Loop
+local isRunning = false
+
+-- 1. Buat ScreenGui & Frame
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ArcadeSpammerGUI"
+
+-- Menentukan parent GUI (CoreGui untuk executor, PlayerGui untuk LocalScript game)
+if gethui then
+	screenGui.Parent = gethui()
+elseif syn and syn.protect_gui then
+	syn.protect_gui(screenGui)
+	screenGui.Parent = CoreGui
+else
+	screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 130)
+frame.Position = UDim2.new(0.5, -110, 0.4, 0)
+frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true -- GUI bisa digeser dengan mouse
+frame.Parent = screenGui
+
+-- Rounded Corner untuk Frame
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 8)
+frameCorner.Parent = frame
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundTransparency = 1
+title.Text = "Dupe Gem[Only arcade]"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 16
+title.Font = Enum.Font.SourceSansBold
+title.Parent = frame
+
+-- Status Indicator
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 20)
+statusLabel.Position = UDim2.new(0, 0, 0, 30)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: OFF (0 / 100000000000000000000000)"
+statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+statusLabel.TextSize = 12
+statusLabel.Font = Enum.Font.SourceSans
+statusLabel.Parent = frame
+
+-- Tombol Start / Stop
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 180, 0, 40)
+toggleBtn.Position = UDim2.new(0.5, -90, 0, 65)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113) -- Hijau
+toggleBtn.Text = "START"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.TextSize = 16
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Parent = frame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 6)
+btnCorner.Parent = toggleBtn
+
+-- 2. Fungsi Logic Loop
+local function startLoop()
+	isRunning = true
+	toggleBtn.Text = "STOP"
+	toggleBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60) -- Merah
+
+	for i = 1, 100000000000000000000000 do
+		if not isRunning then break end -- Berhenti jika tombol Stop ditekan
+
+		local args = {
+			"kills",
+			i,
+			0
+		}
+		arcadeReport:FireServer(unpack(args))
+
+		statusLabel.Text = "Status: ON (" .. i .. " / 100000)"
+		task.wait() -- Jeda anti-lag
+	end
+
+	-- Reset tampilan saat loop selesai atau di-stop
+	isRunning = false
+	toggleBtn.Text = "START"
+	toggleBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+	statusLabel.Text = "Status: Selesai / OFF"
+end
+
+-- 3. Event Listener Tombol
+toggleBtn.MouseButton1Click:Connect(function()
+	if isRunning then
+		isRunning = false
+	else
+		task.spawn(startLoop) -- Jalankan loop di thread baru agar GUI tidak terkejut/freeze
+	end
+end)
