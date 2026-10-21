@@ -1,0 +1,73 @@
+-- Server Hop (устойчивая версия) с несколькими способами получить список серверов
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+local PLACE_ID = game.PlaceId
+local player = Players.LocalPlayer
+
+-- Разные функции HTTP в разных инжекторах
+local req = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
+
+local function httpGet(url)
+    if req then
+        local ok, res = pcall(function() return req({Url = url, Method = "GET"}) end)
+        if ok and res and (res.StatusCode == 200 or res.Success) and res.Body then
+            return res.Body
+        end
+    end
+    local ok, body = pcall(function() return game:HttpGet(url) end)
+    if ok and body then return body end
+    return nil
+end
+
+local hosts = {
+    "https://games.roblox.com",
+    "https://games.roproxy.com", -- прокси, если основной домен недоступен
+}
+
+local function getServers()
+    for _, host in ipairs(hosts) do
+        local url = ("%s/v1/games/%d/servers/Public?sortOrder=Desc&limit=100"):format(host, PLACE_ID)
+        local body = httpGet(url)
+        if body then
+            local ok, data = pcall(function() return HttpService:JSONDecode(body) end)
+            if ok and data and data.data then
+                return data.data
+            end
+        end
+        warn("[ServerHop] Не вышло через " .. host)
+    end
+    return nil
+end
+
+local servers = getServers()
+local candidates = {}
+
+if servers then
+    for _, s in ipairs(servers) do
+        if s.id ~= game.JobId and s.playing < s.maxPlayers then
+            table.insert(candidates, s)
+        end
+    end
+end
+
+if #candidates > 0 then
+    local target = candidates[math.random(1, #candidates)]
+    print("[ServerHop] Прыгаю на сервер " .. target.id .. " (" .. target.playing .. "/" .. target.maxPlayers .. ")")
+    local ok, err = pcall(function()
+        TeleportService:TeleportToPlaceInstance(PLACE_ID, target.id, player)
+    end)
+    if not ok then
+        warn("[ServerHop] Ошибка телепорта: " .. tostring(err))
+    end
+else
+    -- Запасной вариант: обычный телепорт в игру, Roblox сам выберет сервер
+    warn("[ServerHop] Список серверов недоступен, использую обычный телепорт")
+    TeleportService:Teleport(PLACE_ID, player)
+end
+
+TeleportService.TeleportInitFailed:Connect(function(_, result, msg)
+    warn("[ServerHop] TeleportInitFailed: " .. tostring(result) .. " | " .. tostring(msg))
+end)
