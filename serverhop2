@@ -1,0 +1,134 @@
+-- Server Hop каждые 30 минут
+-- + запоминает посещённые серверы (не прыгает на один и тот же дважды за час)
+-- + несколько способов получить список серверов
+-- + автозапуск на новом сервере (см. SCRIPT_FILE / SCRIPT_URL)
+
+local HOP_INTERVAL = 30 * 60 -- 30 минут
+
+-- Для автозапуска после телепорта укажи ОДНО из двух:
+local SCRIPT_FILE = "serverhop_30min.lua" -- положи этот файл в папку workspace инжектора
+local SCRIPT_URL  = ""                    -- или ссылка на raw-версию скрипта
+
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+local PLACE_ID = game.PlaceId
+local player = Players.LocalPlayer
+local STORE = "server-hop-visited.json"
+
+-- Автозапуск на следующем сервере
+local queue = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+if queue then
+    if SCRIPT_URL ~= "" then
+        queue(('loadstring(game:HttpGet("%s"))()'):format(SCRIPT_URL))
+    elseif SCRIPT_FILE ~= "" and isfile and isfile(SCRIPT_FILE) then
+        queue(('loadstring(readfile("%s"))()'):format(SCRIPT_FILE))
+    else
+        warn("[ServerHop] Автозапуск не настроен: укажи SCRIPT_FILE или SCRIPT_URL")
+    end
+else
+    warn("[ServerHop] queue_on_teleport не поддерживается инжектором")
+end
+
+-- Список посещённых серверов (сбрасывается раз в час)
+local hour = os.date("!*t").hour
+local visited = {}
+pcall(function()
+    local saved = HttpService:JSONDecode(readfile(STORE))
+    if saved.hour == hour then
+        visited = saved.ids or {}
+    end
+end)
+visited[game.JobId] = true
+
+local function saveVisited()
+    pcall(function()
+        writefile(STORE, HttpService:JSONEncode({hour = hour, ids = visited}))
+    end)
+end
+saveVisited()
+
+-- HTTP
+local req = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
+
+local function httpGet(url)
+    if req then
+        local ok, res = pcall(function() return req({Url = url, Method = "GET"}) end)
+        if ok and res and (res.StatusCode == 200 or res.Success) and res.Body then
+            return res.Body
+        end
+    end
+    local ok, body = pcall(function() return game:HttpGet(url) end)
+    if ok and body then return body end
+    return nil
+end
+
+local hosts = {
+    "https://games.roblox.com",
+    "https://games.roproxy.com",
+}
+
+-- Ищет сервер с наименьшим числом игроков среди ещё не посещённых
+local function findServer()
+    local best
+    local cursor
+    for _ = 1, 5 do
+        local data
+        for _, host in ipairs(hosts) do
+            local url = ("%s/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(host, PLACE_ID)
+            if cursor then url = url .. "&cursor=" .. cursor end
+            local body = httpGet(url)
+            if body then
+                local ok, decoded = pcall(function() return HttpService:JSONDecode(body) end)
+                if ok and decoded and decoded.data then
+                    data = decoded
+                    break
+                end
+            end
+        end
+        if not data then break end
+
+        for _, s in ipairs(data.data) do
+            if not visited[s.id] and s.playing < s.maxPlayers then
+                if not best or s.playing < best.playing then
+                    best = s
+                end
+            end
+        end
+
+        cursor = data.nextPageCursor
+        if not cursor then break end
+    end
+    return best
+end
+
+local function hop()
+    while true do
+        local server = findServer()
+        if server then
+            visited[server.id] = true
+            saveVisited()
+            print(("[ServerHop] Прыгаю на %s (%d/%d)"):format(server.id, server.playing, server.maxPlayers))
+            local ok, err = pcall(function()
+                TeleportService:TeleportToPlaceInstance(PLACE_ID, server.id, player)
+            end)
+            if ok then
+                task.wait(15) -- ждём телепорта; если не сработало, цикл попробует другой сервер
+            else
+                warn("[ServerHop] Ошибка телепорта: " .. tostring(err))
+            end
+        else
+            warn("[ServerHop] Нет новых серверов, повтор через 10 сек")
+            task.wait(10)
+        end
+    end
+end
+
+TeleportService.TeleportInitFailed:Connect(function(_, result, msg)
+    warn("[ServerHop] TeleportInitFailed: " .. tostring(result) .. " | " .. tostring(msg))
+end)
+
+print(("[ServerHop] Запущен. Следующий прыжок через %d мин."):format(HOP_INTERVAL / 60))
+task.wait(HOP_INTERVAL)
+hop()
